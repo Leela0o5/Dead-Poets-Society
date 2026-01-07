@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 // Pages
 import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import Feed from "./pages/Feed";
 import PoemDetail from "./pages/PoemDetail";
@@ -26,10 +27,18 @@ function App() {
     <Router>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
       <Routes>
-        {/* --- PUBLIC ROUTES --- */}
-
+        {/*  PUBLIC ROUTES  */}
         <Route
           path="/"
+          element={
+            <Layout>
+              <LandingPage />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/feed"
           element={
             <Layout>
               <Feed />
