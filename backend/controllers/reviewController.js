@@ -1,27 +1,27 @@
-import { create, findById, find } from "../models/Review";
-import { findById as _findById } from "../models/Poem";
+import Review from "../models/Review.js";
+import Poem from "../models/Poem.js";
 
-const addReview = async (req, res) => {
+export const addReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const { poemId } = req.params;
 
-    //  Check if the poem actually exists
-    const poem = await _findById(poemId);
+    // Check if poem exists
+    const poem = await Poem.findById(poemId);
     if (!poem) {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    //  Create the review
-    const review = await create({
+    // Create review
+    const review = await Review.create({
       author: req.user.id,
       poem: poemId,
       rating: Number(rating),
       comment,
     });
 
-    // Populate user details immediately so the frontend can display it
-    const populatedReview = await findById(review._id).populate(
+    // Populate author info
+    const populatedReview = await Review.findById(review._id).populate(
       "author",
       "username profilePicture"
     );
@@ -32,11 +32,11 @@ const addReview = async (req, res) => {
   }
 };
 
-const getReviews = async (req, res) => {
+export const getReviews = async (req, res) => {
   try {
-    const reviews = await find({ poem: req.params.poemId })
-      .populate("author", "username profilePicture") // Show who wrote it
-      .sort({ createdAt: -1 }); // Newest first
+    const reviews = await Review.find({ poem: req.params.poemId })
+      .populate("author", "username profilePicture")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(reviews);
   } catch (error) {
@@ -44,32 +44,23 @@ const getReviews = async (req, res) => {
   }
 };
 
-const deleteReview = async (req, res) => {
+export const deleteReview = async (req, res) => {
   try {
-    const review = await findById(req.params.reviewId);
+    const review = await Review.findById(req.params.reviewId);
 
     if (!review) {
       return res.status(404).json({ message: "Review not found" });
     }
 
-    //  Verify Ownership
-    // Check if the logged-in user matches the review author
-    if (review.user.toString() !== req.user.id) {
+    if (review.author.toString() !== req.user.id) {
       return res
         .status(401)
         .json({ message: "Not authorized to delete this review" });
     }
 
     await review.deleteOne();
-
     res.status(200).json({ message: "Review deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-export default {
-  addReview,
-  getReviews,
-  deleteReview,
 };

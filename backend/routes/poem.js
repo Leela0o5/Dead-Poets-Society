@@ -11,10 +11,10 @@ import {
   deletePoem,
   toggleLike,
   getFilteredPoems,
-} from "../controllers/poemController";
+} from "../controllers/poemController.js";
 
 // Import Middleware
-import verifyToken from "../middleware/auth";
+import verifyToken from "../middlewares/auth.js";
 
 // Get all public poems (with pagination)
 router.get("/", getAllPoems);

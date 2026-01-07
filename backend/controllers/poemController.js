@@ -1,9 +1,9 @@
-import Poem from "../models/Poem";
-import User from "../models/User";
-import Review from "../models/Review";
-import Discussion from "../models/Discussion";
+import Poem from "../models/Poem.js";
+import User from "../models/User.js";
+import Review from "../models/Review.js";
+import Discussion from "../models/Discussion.js";
 
-const createPoem = async (req, res) => {
+export const createPoem = async (req, res) => {
   try {
     const { title, content, tags, visibility } = req.body;
 
@@ -32,7 +32,7 @@ const createPoem = async (req, res) => {
   }
 };
 
-const getAllPoems = async (req, res) => {
+export const getAllPoems = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -60,7 +60,7 @@ const getAllPoems = async (req, res) => {
   }
 };
 
-const getUserPoems = async (req, res) => {
+export const getUserPoems = async (req, res) => {
   try {
     const { userId } = req.params;
     const isOwner = req.user && req.user.id === userId;
@@ -82,7 +82,7 @@ const getUserPoems = async (req, res) => {
   }
 };
 
-const getPoemById = async (req, res) => {
+export const getPoemById = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id)
       .populate("author", "username profilePicture bio")
@@ -111,7 +111,7 @@ const getPoemById = async (req, res) => {
   }
 };
 
-const updatePoem = async (req, res) => {
+export const updatePoem = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id);
 
@@ -137,7 +137,7 @@ const updatePoem = async (req, res) => {
   }
 };
 
-const deletePoem = async (req, res) => {
+export const deletePoem = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id);
 
@@ -162,7 +162,7 @@ const deletePoem = async (req, res) => {
   }
 };
 
-const toggleLike = async (req, res) => {
+export const toggleLike = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id);
     const user = await User.findById(req.user.id);
@@ -200,7 +200,7 @@ const toggleLike = async (req, res) => {
   }
 };
 
-const searchPoems = async (req, res) => {
+export const searchPoems = async (req, res) => {
   try {
     const keyword = req.query.q
       ? {
@@ -223,7 +223,7 @@ const searchPoems = async (req, res) => {
   }
 };
 
-const getFilteredPoems = async (req, res) => {
+export const getFilteredPoems = async (req, res) => {
   try {
     const { tag, q } = req.query; // Accept tag and optional search query
 
@@ -248,16 +248,4 @@ const getFilteredPoems = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  createPoem,
-  getAllPoems,
-  getUserPoems,
-  getPoemById,
-  updatePoem,
-  deletePoem,
-  toggleLike,
-  searchPoems,
-  getFilteredPoems,
 };

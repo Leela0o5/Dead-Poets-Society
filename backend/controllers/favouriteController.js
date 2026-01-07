@@ -1,13 +1,13 @@
-import { findById } from '../models/User';
-import { findById as _findById } from '../models/Poem';
+import User from "../models/User.js";
+import Poem from "../models/Poem.js";
 
-const toggleFavorite = async (req, res) => {
+export const toggleFavorite = async (req, res) => {
   try {
     const { poemId } = req.params;
-    const user = await findById(req.user.id);
+    const user = await User.findById(req.user.id);
 
     //  Verify Poem exists 
-    const poemExists = await _findById(poemId);
+    const poemExists = await Poem.findById(poemId);
     if (!poemExists) {
       return res.status(404).json({ message: 'Poem not found' });
     }
@@ -36,11 +36,11 @@ const toggleFavorite = async (req, res) => {
   }
 };
 
-const getUserFavorites = async (req, res) => {
+export const getUserFavorites = async (req, res) => {
   try {
     // Find the user and "Populate" the favorites array
     // This turns the list of IDs into actual Poem objects
-    const user = await findById(req.user.id).populate({
+    const user = await User.findById(req.user.id).populate({
       path: 'favorites',
       select: 'title content author tags createdAt', 
       populate: {
@@ -57,9 +57,4 @@ const getUserFavorites = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-export default {
-  toggleFavorite,
-  getUserFavorites,
 };

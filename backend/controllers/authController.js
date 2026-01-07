@@ -1,15 +1,14 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User from "../models/User";
+import User from "../models/User.js";
 
 // Helper function to generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-};
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
@@ -45,7 +44,7 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -69,7 +68,7 @@ const login = async (req, res) => {
   }
 };
 
-const logout = (req, res) => {
+export const logout = (req, res) => {
   // Destroy the session in the database
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ message: "Could not log out" });
@@ -79,7 +78,7 @@ const logout = (req, res) => {
   });
 };
 
-const getMe = async (req, res) => {
+export const getMe = async (req, res) => {
   try {
     // req.user is set by your auth middleware
     const user = await User.findById(req.user.id).select("-password"); // Exclude password from return
@@ -94,7 +93,7 @@ const getMe = async (req, res) => {
   }
 };
 
-const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
@@ -122,10 +121,3 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = {
-  register,
-  login,
-  getMe,
-  updateProfile,
-  logout,
-};

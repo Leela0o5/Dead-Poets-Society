@@ -1,8 +1,12 @@
 import { Router } from "express";
 const router = Router();
 
-import { addReview, getReviews, deleteReview } from "../controllers/reviewController";
-import verifyToken from "../middleware/auth";
+import {
+  addReview,
+  getReviews,
+  deleteReview,
+} from "../controllers/reviewController.js";
+import verifyToken from "../middlewares/auth.js";
 
 router.post("/:poemId", verifyToken, addReview);
 router.get("/:poemId", getReviews);

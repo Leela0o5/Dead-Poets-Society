@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+import { Schema as _Schema, model } from "mongoose";
+const Schema = _Schema;
 
 const User = new Schema({
   username: { type: String, required: true, unique: true },
@@ -9,7 +9,7 @@ const User = new Schema({
   profilePicture: { type: String, required: false },
   joinedDate: { type: Date, default: Date.now },
   totalLikes: { type: Number, default: 0 },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Poem" }],
+  favorites: [{ type: _Schema.Types.ObjectId, ref: "Poem" }],
 });
 
-module.exports = mongoose.model("User", User);
+export default model("User", User);

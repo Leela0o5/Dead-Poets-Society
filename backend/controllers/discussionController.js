@@ -1,7 +1,7 @@
-import { create, findById, find } from "../models/Discussion";
-import { findById as _findById } from "../models/Poem";
+import Discussion from "../models/Discussion.js";
+import Poem from "../models/Poem.js";
 
-const addDiscussion = async (req, res) => {
+export const addDiscussion = async (req, res) => {
   try {
     const { content } = req.body;
     const { poemId } = req.params;
@@ -10,25 +10,23 @@ const addDiscussion = async (req, res) => {
       return res.status(400).json({ message: "Comment text is required" });
     }
 
-    //  Verify Poem exists
-    const poem = await _findById(poemId);
+    // Verify poem exists
+    const poem = await Poem.findById(poemId);
     if (!poem) {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    //  Create Discussion
-    const discussion = await create({
+    // Create discussion
+    const discussion = await Discussion.create({
       author: req.user.id,
       poem: poemId,
-      content: content,
-      createdAt: Date.now(),
+      content,
     });
 
-    // Populate author details immediately for the UI
-    const populatedDiscussion = await findById(discussion._id).populate(
-      "author",
-      "username profilePicture"
-    );
+    // Populate author for UI
+    const populatedDiscussion = await Discussion.findById(
+      discussion._id
+    ).populate("author", "username profilePicture");
 
     res.status(201).json(populatedDiscussion);
   } catch (error) {
@@ -36,9 +34,11 @@ const addDiscussion = async (req, res) => {
   }
 };
 
-const getDiscussions = async (req, res) => {
+export const getDiscussions = async (req, res) => {
   try {
-    const discussions = await find({ poem: req.params.poemId })
+    const discussions = await Discussion.find({
+      poem: req.params.poemId,
+    })
       .populate("author", "username profilePicture")
       .sort({ createdAt: -1 });
 
@@ -48,15 +48,15 @@ const getDiscussions = async (req, res) => {
   }
 };
 
-const deleteDiscussion = async (req, res) => {
+export const deleteDiscussion = async (req, res) => {
   try {
-    const discussion = await findById(req.params.discussionId);
+    const discussion = await Discussion.findById(req.params.discussionId);
 
     if (!discussion) {
       return res.status(404).json({ message: "Discussion not found" });
     }
 
-    // Check Ownership
+    // Ownership check
     if (discussion.author.toString() !== req.user.id) {
       return res
         .status(401)
@@ -64,15 +64,8 @@ const deleteDiscussion = async (req, res) => {
     }
 
     await discussion.deleteOne();
-
     res.status(200).json({ message: "Discussion deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-export default {
-  addDiscussion,
-  getDiscussions,
-  deleteDiscussion,
 };

@@ -5,10 +5,10 @@ import {
   getMe,
   updateProfile,
   logout,
-} from "../controllers/authController";
-const router = Router();
+} from "../controllers/authController.js";
+import verifyToken from "../middlewares/auth.js";
 
-const verifyToken = require("../middlewares/auth");
+const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
@@ -19,4 +19,4 @@ router.post("/logout", logout);
 router.get("/me", verifyToken, getMe);
 router.put("/profile", verifyToken, updateProfile);
 
-module.exports = router;
+export default router;

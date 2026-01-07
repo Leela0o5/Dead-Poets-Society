@@ -1,18 +1,17 @@
-connect(
-  "mongodb+srv://leela:leela@clusterpoetry.rzluawx.mongodb.net/?appName=ClusterPoetry"
-);
-
+import dotenv from "dotenv";
+dotenv.config();
 import express, { json, urlencoded } from "express";
 import { connect as _connect } from "mongoose";
 import cors from "cors";
-import { config } from "dotenv";
-config();
-import authRoutes from "./routes/auth";
-import poemRoutes from "./routes/poems";
-import reviewRoutes from "./routes/reviews";
-import discussionRoutes from "./routes/discussions";
-import favoriteRoutes from "./routes/favorites";
-import aiRoutes from "./routes/ai";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+
+import authRoutes from "./routes/auth.js";
+import poemRoutes from "./routes/poem.js";
+import reviewRoutes from "./routes/reviews.js";
+import discussionRoutes from "./routes/discussion.js";
+import favoriteRoutes from "./routes/favourites.js";
+import aiRoutes from "./routes/ai.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,7 +37,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 3, // 1 Day
       httpOnly: true, // Prevents XSS attacks
-      secure: process.env.NODE_ENV === "production", 
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax", // Protects against CSRF
     },
   })

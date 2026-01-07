@@ -4,9 +4,9 @@ const router = Router();
 import {
   toggleFavorite,
   getUserFavorites,
-} from "../controllers/favoriteController";
+} from "../controllers/favouriteController.js";
 
-import verifyToken from "../middleware/auth";
+import verifyToken from "../middlewares/auth.js";
 
 router.post("/:poemId", verifyToken, toggleFavorite);
 router.get("/", verifyToken, getUserFavorites);
