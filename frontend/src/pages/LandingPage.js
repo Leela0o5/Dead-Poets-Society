@@ -18,8 +18,8 @@ const LandingPage = () => {
         </h1>
 
         <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto italic leading-relaxed">
-          "We don't read and write poetry because it's cute. We read and write
-          poetry because we are members of the human race."
+          "Medicine, law, business, engineering, these are noble pursuits... But
+          poetry, beauty, romance, love, these are what we stay alive for!"
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
