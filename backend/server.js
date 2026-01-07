@@ -21,31 +21,23 @@ const PORT = process.env.PORT || 5000;
 // CORS: Allows frontend to talk to this backend
 app.use(
   cors({
-    origin: "http://localhost:5173", // my Frontend URL
+    origin: "http://localhost:3000", // my Frontend URL
     credentials: true,
   })
 );
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "super_secret_session_key",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      collectionName: "sessions",
-    }),
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 3, // 1 Day
-      httpOnly: true, // Prevents XSS attacks
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // Protects against CSRF
-    },
-  })
-);
-
 //  Body Parser: Accept JSON data in requests
 app.use(json());
 app.use(urlencoded({ extended: true }));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "secret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 },
+  })
+);
 
 // --- Database Connection ---
 _connect(process.env.MONGO_URI)

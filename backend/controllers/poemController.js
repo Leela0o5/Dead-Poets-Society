@@ -17,7 +17,7 @@ export const createPoem = async (req, res) => {
       title,
       content,
       tags: tags || [],
-      visibility: visibility || true,
+      visibility: visibility !== undefined ? visibility : true,
       author: req.user.id, // From authMiddleware
     });
 
@@ -73,7 +73,7 @@ export const getUserPoems = async (req, res) => {
     }
 
     const poems = await Poem.find(query)
-      .populate("author", "username profilePicture")
+      .populate("author", "username profilePicture bio")
       .sort({ createdAt: -1 });
 
     res.status(200).json(poems);
@@ -225,24 +225,39 @@ export const searchPoems = async (req, res) => {
 
 export const getFilteredPoems = async (req, res) => {
   try {
-    const { tag, q } = req.query; // Accept tag and optional search query
+    const { query, tags } = req.query; // Get data from URL params
 
-    let query = { visibility: true };
+    let filter = { visibility: true }; // Always default to Public only
 
-    if (tag) {
-      query.tags = { $in: [tag] };
+    //  Handle Tags
+    if (tags) {
+      const tagArray = tags.split(",");
+
+      filter.tags = { $in: tagArray.map((t) => new RegExp(t, "i")) };
     }
 
-    if (q) {
-      query.$or = [
-        { title: { $regex: q, $options: "i" } },
-        { content: { $regex: q, $options: "i" } },
+    //  Handle Text Search (Title, Content, Author)
+    if (query) {
+      // Find Users matching the name "query"
+      const matchingUsers = await User.find({
+        username: { $regex: query, $options: "i" },
+      }).select("_id");
+
+      const userIds = matchingUsers.map((u) => u._id);
+
+      //  Build the Search Query
+      // Matches Title OR Content OR Author ID
+      filter.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { content: { $regex: query, $options: "i" } },
+        { author: { $in: userIds } }, // Poems by these authors
       ];
     }
 
-    const poems = await Poem.find(query)
-      .populate("author", "username profilePicture")
-      .sort({ createdAt: -1 });
+    //  Execute Query
+    const poems = await Poem.find(filter)
+      .populate("author", "username profilePicture") // Get author details
+      .sort({ createdAt: -1 }); // Newest first
 
     res.status(200).json(poems);
   } catch (error) {

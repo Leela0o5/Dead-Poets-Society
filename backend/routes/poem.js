@@ -16,11 +16,14 @@ import {
 // Import Middleware
 import verifyToken from "../middlewares/auth.js";
 
+// New Search route
+router.get("/search", getFilteredPoems);
+
 // Get all public poems (with pagination)
 router.get("/", getAllPoems);
 router.get("/search", getFilteredPoems);
-router.get("/user/:userId", getUserPoems);
-router.get("/:id", getPoemById);
+router.get("/user/:userId", verifyToken, getUserPoems);
+router.get("/:id", verifyToken, getPoemById);
 
 // --- Protected Routes ---
 // Create a new poem
