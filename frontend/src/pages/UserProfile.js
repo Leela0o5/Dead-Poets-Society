@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 import PoemCard from "../components/poemCard";
-import { User } from "lucide-react";
+import Avatar from "../components/Avatar";
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -36,7 +36,7 @@ const UserProfile = () => {
       {/* Header */}
       <div className="text-center mb-10">
         <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500">
-          <User size={48} />
+          <Avatar user={userInfo.username} size="l"></Avatar>
         </div>
         <h1 className="text-3xl font-bold text-gray-800">
           {userInfo ? `@${userInfo.username}` : "Poet Profile"}

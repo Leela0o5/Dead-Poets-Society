@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, AlertCircle } from "lucide-react";
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Feather, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -15,75 +16,114 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setLoading(true);
+  
+    toast.dismiss();
 
     try {
       await login(formData);
-      navigate("/"); // Redirect to Home/Feed on success
+      toast.success("Welcome back, poet.");
+      navigate('/feed'); // Redirect to Feed
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
+      toast.error(err.response?.data?.message || "Login failed. Please check your credentials.");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Welcome Back
-        </h2>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      
+      {/* Login Card */}
+      <div className="bg-white w-full max-w-md p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100 animate-fadeIn relative overflow-hidden">
+        
+        {/* Decorative Top Bar  */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-900"></div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center gap-2">
-            <AlertCircle size={20} />
-            <span>{error}</span>
+        {/* Header */}
+        <div className="text-center mb-10 mt-2">
+          <div className="flex justify-center mb-4 text-gray-800">
+            <Feather size={48} strokeWidth={1.5} />
           </div>
-        )}
+          <h2 className="text-4xl font-bold text-gray-900 font-serif mb-3 tracking-tight">Welcome Back</h2>
+          <p className="text-gray-500 italic font-serif">
+            "The powerful play goes on, and you may contribute a verse."
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-2">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Email Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wide">Email</label>
+            <div className="relative group">
+              <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition" size={20} />
               <input
                 type="email"
                 name="email"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                placeholder="walt@poetry.com"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
+                placeholder="poet@society.com"
+                value={formData.email}
                 onChange={handleChange}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 mb-2">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+          {/* Password Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wide">Password</label>
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition" size={20} />
               <input
                 type="password"
                 name="password"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
                 placeholder="••••••••"
+                value={formData.password}
                 onChange={handleChange}
               />
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+            disabled={loading}
+            className={`w-full py-3.5 rounded-lg text-white font-bold text-lg shadow-md transition-all flex items-center justify-center gap-2 ${
+              loading 
+                ? "bg-gray-400 cursor-not-allowed" 
+                : "bg-gray-900 hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5"
+            }`}
           >
-            Login
+            {loading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Enter Society</span>
+                <ArrowRight size={20} />
+              </>
+            )}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-gray-600">
-          Don't have an account?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </p>
+        {/* Footer Link */}
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>
+            New to the society?{' '}
+            <Link 
+              to="/register" 
+              className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition"
+            >
+              Start your journal
+            </Link>
+          </p>
+        </div>
+
       </div>
     </div>
   );

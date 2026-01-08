@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import PoemCard from "../components/poemCard";
 import SearchBar from "../components/SearchBar";
-import { PenTool, Loader2, XCircle } from "lucide-react";
+import { PenTool, XCircle, Feather } from "lucide-react";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
@@ -13,11 +13,9 @@ const Feed = () => {
   const [poems, setPoems] = useState([]);
   const [filteredPoems, setFilteredPoems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [displayCount, setDisplayCount] = useState(5);
+  const [displayCount, setDisplayCount] = useState(9);
 
-  // Track if a search is active to show the button
   const [isSearching, setIsSearching] = useState(false);
-  // Key to force SearchBar to reset
   const [resetKey, setResetKey] = useState(0);
 
   const { user } = useAuth();
@@ -32,27 +30,23 @@ const Feed = () => {
         setPoems(poemsArray);
         setFilteredPoems(poemsArray);
       } catch (err) {
-        toast.error("Failed to load poems. Please try again.");
+        toast.error("Failed to load poems.");
       } finally {
         setLoading(false);
       }
     };
     fetchPoems();
   }, []);
-  if (loading) return <LoadingSpinner />;
 
-  //  SERVER-SIDE SEARCH
+  // SERVER-SIDE SEARCH
   const handleFilter = async (query, activeTags) => {
     setLoading(true);
-
-    // Check if we need to reset to "All Poems"
     const isSearchEmpty =
       (!query || query.trim() === "") &&
       (!activeTags || activeTags.length === 0);
 
     try {
       if (isSearchEmpty) {
-        // Load default feed
         const { data } = await api.get("/poems");
         const poemsArray = Array.isArray(data) ? data : data.poems || [];
         setFilteredPoems(poemsArray);
@@ -67,96 +61,116 @@ const Feed = () => {
         setIsSearching(true);
       }
     } catch (err) {
-      toast.error("Search failed. Try Again");
+      toast.error("Search failed.");
     } finally {
       setLoading(false);
-      setDisplayCount(5); // Reset pagination
+      setDisplayCount(9);
     }
   };
-  // Clear Filter Logic
+
   const handleClear = () => {
-    setFilteredPoems(poems); // Restore all poems
-    setIsSearching(false); // Hide button
-    setResetKey((prev) => prev + 1); // (clearing its inputs)
-    setDisplayCount(5);
+    setFilteredPoems(poems);
+    setIsSearching(false);
+    setResetKey((prev) => prev + 1);
+    setDisplayCount(9);
   };
 
   const handleLoadMore = () => {
-    setDisplayCount((prev) => prev + 5);
+    setDisplayCount((prev) => prev + 6);
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center mt-20">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
-      </div>
-    );
+  if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 pb-24">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 font-serif">
-          Discover Poems
-        </h1>
-
-        <SearchBar key={resetKey} onSearch={handleFilter} />
-
-        {isSearching && (
-          <div className="flex items-center justify-between bg-blue-50 text-blue-800 px-4 py-3 rounded-lg mb-6 animate-fadeIn">
-            <span className="font-medium">
-              Showing filtered results ({filteredPoems.length})
-            </span>
-            <button
-              onClick={handleClear}
-              className="flex items-center gap-1 text-sm font-bold hover:text-blue-600 transition"
-            >
-              <XCircle size={18} /> Clear Filters
-            </button>
+    // THEME: Uses the global paper background from Layout
+    <div className="min-h-screen">
+      {/*  SEARCH SECTION */}
+      {/* THEME: Removed bg-white, added padding and font-serif */}
+      <div className="pt-12 pb-10 px-4 mb-4 relative">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex justify-center mb-4 text-gray-800 animate-fadeIn">
+            <Feather size={48} strokeWidth={1} />
           </div>
-        )}
+
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight animate-fadeIn">
+            The Anthology
+          </h1>
+
+          <p className="text-xl text-gray-600 italic font-serif mb-10 max-w-2xl mx-auto leading-relaxed animate-fadeIn delay-100">
+            "Poetry is truth in its Sunday clothes."
+          </p>
+
+          {/* Search Bar Container */}
+          <div className="animate-fadeIn delay-200">
+            <SearchBar key={resetKey} onSearch={handleFilter} />
+          </div>
+
+          {/* Search Results Indicator */}
+          {isSearching && (
+            <div className="flex items-center justify-center gap-4 mt-6 animate-fadeIn">
+              <span className="font-serif text-gray-900 bg-white px-4 py-1.5 rounded-full border border-gray-200 text-sm shadow-sm">
+                Found {filteredPoems.length} result
+                {filteredPoems.length !== 1 && "s"}
+              </span>
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1 text-sm font-bold text-gray-500 hover:text-red-600 transition"
+              >
+                <XCircle size={16} /> Clear
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {user && (
-        <button
-          onClick={() => navigate("/create")}
-          className="fixed bottom-8 right-8 md:hidden bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition z-50"
-        >
-          <PenTool size={24} />
-        </button>
-      )}
+      {/*  CONTENT GRID  */}
+      <div className="max-w-7xl mx-auto px-4 pb-24">
+        {/* Floating Action Button (Mobile) */}
+        {user && (
+          <button
+            onClick={() => navigate("/create")}
+            className="fixed bottom-8 right-8 md:hidden bg-gray-900 text-white p-4 rounded-full shadow-2xl hover:bg-black transition z-50 hover:scale-105 active:scale-95"
+          >
+            <PenTool size={24} />
+          </button>
+        )}
 
-      {/* Results List */}
-      <div className="space-y-6">
+        {/* MASONRY LAYOUT */}
         {filteredPoems.length > 0 ? (
-          filteredPoems
-            .slice(0, displayCount)
-            .map((poem) => (
-              <PoemCard key={poem._id} className="animate-fadeIn" poem={poem} />
-            ))
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            {filteredPoems.slice(0, displayCount).map((poem) => (
+              <div key={poem._id} className="break-inside-avoid animate-fadeIn">
+                <PoemCard poem={poem} />
+              </div>
+            ))}
+          </div>
         ) : (
-          <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <div className="flex flex-col items-center justify-center py-20 animate-fadeIn">
             <EmptyState
               message="No poems found"
               subMessage="Try adjusting your search terms or tags."
             />
             <button
               onClick={handleClear}
-              className="text-blue-600 hover:underline mt-2 text-sm font-bold"
+              className="text-gray-900 border-b-2 border-gray-900 pb-0.5 hover:text-blue-700 hover:border-blue-700 mt-6 text-sm font-bold transition font-serif"
             >
-              Clear Search & Show All
+              Show All Poems
+            </button>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {displayCount < filteredPoems.length && (
+          <div className="flex justify-center mt-16 pb-10">
+            <button
+              onClick={handleLoadMore}
+              className="bg-transparent border-2 border-gray-900 text-gray-900 px-10 py-3 rounded-full hover:bg-gray-900 hover:text-white transition font-serif font-bold text-lg tracking-wide shadow-sm hover:shadow-lg"
+            >
+              Load More Verses
             </button>
           </div>
         )}
       </div>
-
-      {displayCount < filteredPoems.length && (
-        <button
-          onClick={handleLoadMore}
-          className="w-full mt-8 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-        >
-          Load More
-        </button>
-      )}
     </div>
   );
 };

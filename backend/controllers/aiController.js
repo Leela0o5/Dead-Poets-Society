@@ -26,13 +26,6 @@ export const generateInsight = async (req, res) => {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    // Authorization check
-    if (poem.author.toString() !== req.user.id) {
-      return res.status(403).json({
-        message: "Not authorized to generate insights for this poem",
-      });
-    }
-
     // Prompt
     const prompt = `
 Analyze the following poem. Provide a brief, insightful critique (3–4 sentences)

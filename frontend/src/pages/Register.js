@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, User, AlertCircle } from "lucide-react";
+import toast from "react-hot-toast";
+import { Feather, Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +11,7 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -20,11 +21,14 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+
+    toast.dismiss();
 
     if (formData.password !== formData.confirmPassword) {
-      return setError("Passwords do not match");
+      return toast.error("Passwords do not match.");
     }
+
+    setLoading(true);
 
     try {
       await register({
@@ -32,105 +36,163 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
       });
+      toast.success("Membership approved. Please log in.");
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      toast.error(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Join Poetic Odyssey
-        </h2>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      {/* Registration Card */}
+      <div className="bg-white w-full max-w-md p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100 animate-fadeIn relative overflow-hidden">
+        {/* Decorative Top Bar */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-900"></div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center gap-2">
-            <AlertCircle size={20} />
-            <span>{error}</span>
+        {/* Header */}
+        <div className="text-center mb-8 mt-2">
+          <div className="flex justify-center mb-4 text-gray-800">
+            <Feather size={48} strokeWidth={1.5} />
           </div>
-        )}
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 font-serif mb-3 tracking-tight">
+            Join the Society
+          </h2>
+          <p className="text-gray-500 italic font-serif">
+            "To live deep and suck out all the marrow of life."
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-2">Username</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 text-gray-400" size={20} />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username Input */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wide">
+              Username
+            </label>
+            <div className="relative group">
+              <User
+                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition"
+                size={20}
+              />
               <input
                 type="text"
                 name="username"
-                autoComplete="username"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
                 placeholder="WaltWhitman"
+                value={formData.username}
                 onChange={handleChange}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 mb-2">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+          {/* Email Input */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wide">
+              Email
+            </label>
+            <div className="relative group">
+              <Mail
+                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition"
+                size={20}
+              />
               <input
                 type="email"
                 name="email"
-                autoComplete="email"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                placeholder="walt@poetry.com"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
+                placeholder="poet@society.com"
+                value={formData.email}
                 onChange={handleChange}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 mb-2">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+          {/* Password Input */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wide">
+              Password
+            </label>
+            <div className="relative group">
+              <Lock
+                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition"
+                size={20}
+              />
               <input
                 type="password"
                 name="password"
-                autoComplete="new-password"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
                 placeholder="••••••••"
+                value={formData.password}
                 onChange={handleChange}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 mb-2">Confirm Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+          {/* Confirm Password Input */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wide">
+              Confirm Password
+            </label>
+            <div className="relative group">
+              <Lock
+                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-blue-600 transition"
+                size={20}
+              />
               <input
                 type="password"
                 name="confirmPassword"
-                autoComplete="new-password"
                 required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder-gray-400"
                 placeholder="••••••••"
+                value={formData.confirmPassword}
                 onChange={handleChange}
               />
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+            disabled={loading}
+            className={`w-full py-3.5 rounded-lg text-white font-bold text-lg shadow-md transition-all flex items-center justify-center gap-2 mt-2 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gray-900 hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5"
+            }`}
           >
-            Sign Up
+            {loading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <>
+                <span>Become a Member</span>
+                <ArrowRight size={20} />
+              </>
+            )}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-gray-600">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-        </p>
+        {/* Footer Link */}
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>
+            Already a member?{" "}
+            <Link
+              to="/login"
+              className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition"
+            >
+              Sign in here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

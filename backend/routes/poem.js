@@ -38,4 +38,7 @@ router.delete("/:id", verifyToken, deletePoem);
 // Toggle Like
 router.put("/:id/like", verifyToken, toggleLike);
 
+// Edit poem
+router.put("/:id", verifyToken, updatePoem);
+
 export default router;

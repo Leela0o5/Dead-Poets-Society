@@ -46,21 +46,33 @@ export const getReviews = async (req, res) => {
 
 export const deleteReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.reviewId);
+    const { reviewId } = req.params;
+    console.log("Attempting to delete review:", reviewId);
 
+    const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ message: "Review not found" });
     }
 
-    if (review.author.toString() !== req.user.id) {
-      return res
-        .status(401)
-        .json({ message: "Not authorized to delete this review" });
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
-    await review.deleteOne();
+    if (review.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    //  Remove reference from Poem
+    await Poem.findByIdAndUpdate(review.poem, {
+      $pull: { reviews: reviewId },
+    });
+
+    //  Delete the Review
+    await Review.findByIdAndDelete(reviewId);
+
     res.status(200).json({ message: "Review deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.error("DELETE REVIEW ERROR:", err);
+    res.status(500).json({ message: err.message });
   }
 };

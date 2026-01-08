@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+
 // Pages
-import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
+import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Feed from "./pages/Feed";
 import PoemDetail from "./pages/PoemDetail";
@@ -10,24 +11,29 @@ import CreatePoem from "./pages/CreatePoem";
 import MyPoems from "./pages/MyPoems";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
+import Rules from "./pages/Rules";
 
 // Components
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const Layout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-[#f8f5f2]">
     <Navbar />
-    {children}
+    <div className="animate-fadeIn">{children}</div>
   </div>
 );
 
 function App() {
   return (
     <Router>
+      {/* Toast Notifications Global Setup */}
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+
       <Routes>
-        {/*  PUBLIC ROUTES  */}
+        {/* --- PUBLIC ROUTES --- */}
+
+        {/* Landing Page */}
         <Route
           path="/"
           element={
@@ -37,38 +43,68 @@ function App() {
           }
         />
 
+        {/* Rules Page */}
         <Route
-          path="/feed"
+          path="/rules"
           element={
             <Layout>
-              <Feed />
+              <Rules />
             </Layout>
           }
         />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Public view of a specific poem */}
+        {/*  Auth Pages  */}
         <Route
-          path="/poem/:id"
+          path="/login"
           element={
             <Layout>
-              <PoemDetail />
+              <Login />
             </Layout>
           }
         />
 
-        {/* Public view of another user's profile */}
         <Route
-          path="/profile/:userId"
+          path="/register"
           element={
             <Layout>
-              <UserProfile />
+              <Register />
             </Layout>
           }
         />
+
+        {/* --- PROTECTED ROUTES --- */}
+        {/* User must be logged in to access these */}
+
         <Route element={<ProtectedRoute />}>
+          {/* View Poem Details */}
+          <Route
+            path="/poem/:id"
+            element={
+              <Layout>
+                <PoemDetail />
+              </Layout>
+            }
+          />
+
+          {/* View Other User Profiles */}
+          <Route
+            path="/profile/:userId"
+            element={
+              <Layout>
+                <UserProfile />
+              </Layout>
+            }
+          />
+          {/* Feed (Public) */}
+          <Route
+            path="/feed"
+            element={
+              <Layout>
+                <Feed />
+              </Layout>
+            }
+          />
+
           <Route
             path="/create"
             element={
@@ -86,6 +122,7 @@ function App() {
               </Layout>
             }
           />
+
           <Route
             path="/profile"
             element={

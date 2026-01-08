@@ -91,8 +91,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Connect</h3>
               <p className="text-gray-600">
-                Follow your favorite poets, discuss interpretations, and build
-                your circle.
+                Engage in literary discussions, leave anonymous feedback, and
+                rate the verses that speak to you.
               </p>
             </div>
           </div>

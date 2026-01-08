@@ -1,5 +1,5 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import api from '../api/axios';
+import { createContext, useState, useEffect, useContext } from "react";
+import api from "../api/axios";
 
 const AuthContext = createContext(null);
 
@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
-        const { data } = await api.get('/auth/me'); 
+        const { data } = await api.get("/auth/me");
         setUser(data);
       } catch (error) {
         setUser(null);
@@ -24,21 +24,23 @@ export const AuthProvider = ({ children }) => {
 
   // Login
   const login = async (credentials) => {
-    const { data } = await api.post('/auth/login', credentials);
-    setUser(data.user || data); // Adjust based on your backend response
+    const { data } = await api.post("/auth/login", credentials);
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    setUser(data.user || data);
     return data;
   };
 
   // Register
   const register = async (credentials) => {
-    const { data } = await api.post('/auth/register', credentials);
+    const { data } = await api.post("/auth/register", credentials);
     setUser(data.user || data);
     return data;
   };
 
   // Logout
   const logout = async () => {
-    await api.post('/auth/logout');
+    await api.post("/auth/logout");
     setUser(null);
   };
 

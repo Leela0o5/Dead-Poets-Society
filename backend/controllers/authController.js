@@ -34,6 +34,7 @@ export const register = async (req, res) => {
         _id: user.id,
         name: user.username,
         email: user.email,
+        profilePicture: user.profilePicture,
         token: generateToken(user._id),
       });
     } else {
@@ -56,6 +57,7 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        profilePicture: user.profilePicture,
         role: user.role,
       };
 
@@ -120,4 +122,3 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

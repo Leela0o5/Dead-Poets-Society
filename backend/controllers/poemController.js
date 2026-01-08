@@ -1,8 +1,8 @@
 import Poem from "../models/Poem.js";
 import User from "../models/User.js";
 import Review from "../models/Review.js";
-import Discussion from "../models/Discussion.js";
 
+//  Create Poem
 export const createPoem = async (req, res) => {
   try {
     const { title, content, tags, visibility } = req.body;
@@ -18,7 +18,7 @@ export const createPoem = async (req, res) => {
       content,
       tags: tags || [],
       visibility: visibility !== undefined ? visibility : true,
-      author: req.user.id, // From authMiddleware
+      author: req.user.id,
     });
 
     const populatedPoem = await Poem.findById(poem._id).populate(
@@ -32,18 +32,18 @@ export const createPoem = async (req, res) => {
   }
 };
 
+//  Get All Poems (Feed)
 export const getAllPoems = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Filter only public poems
     const query = { visibility: true };
 
     const poems = await Poem.find(query)
       .populate("author", "username profilePicture")
-      .sort({ createdAt: -1 }) // Newest first
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -60,6 +60,7 @@ export const getAllPoems = async (req, res) => {
   }
 };
 
+// Get User Profile Poems
 export const getUserPoems = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -67,7 +68,6 @@ export const getUserPoems = async (req, res) => {
 
     let query = { author: userId };
 
-    // If not the owner, only show public poems
     if (!isOwner) {
       query.visibility = true;
     }
@@ -82,20 +82,20 @@ export const getUserPoems = async (req, res) => {
   }
 };
 
+// Get Single Poem
 export const getPoemById = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id)
       .populate("author", "username profilePicture bio")
       .populate({
-        path: "reviews", // Assumes a virtual or field for reviews
-        populate: { path: "author", select: "username profilePicture" },
+        path: "reviews",
+        populate: { path: "author", select: "username profilePicture" }, 
       });
 
     if (!poem) {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    // Check visibility permissions
     const isPrivate = poem.visibility === false;
     const isOwner = req.user && poem.author._id.toString() === req.user.id;
 
@@ -111,32 +111,40 @@ export const getPoemById = async (req, res) => {
   }
 };
 
+// Update Poe
 export const updatePoem = async (req, res) => {
   try {
-    const poem = await Poem.findById(req.params.id);
+    const { id } = req.params;
+    const { title, content, tags, visibility } = req.body;
 
+    console.log(`Attempting to update poem: ${id}`);
+
+    const poem = await Poem.findById(id);
     if (!poem) {
       return res.status(404).json({ message: "Poem not found" });
     }
-
-    // Verify ownership
     if (poem.author.toString() !== req.user.id) {
-      return res.status(401).json({ message: "Not authorized" });
+      return res
+        .status(403)
+        .json({ message: "You are not the author of this poem." });
     }
 
-    // Update fields
-    poem.title = req.body.title || poem.title;
-    poem.content = req.body.content || poem.content;
-    poem.tags = req.body.tags || poem.tags;
-    poem.visibility = req.body.visibility || poem.visibility;
+    if (title) poem.title = title;
+    if (content) poem.content = content;
+    if (tags) poem.tags = tags;
+    if (visibility !== undefined) poem.visibility = visibility;
 
     const updatedPoem = await poem.save();
+
+    console.log("Poem updated successfully");
     res.status(200).json(updatedPoem);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.error("UPDATE POEM ERROR:", err);
+    res.status(500).json({ message: "Server error while updating poem." });
   }
 };
 
+//  Delete Poem
 export const deletePoem = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id);
@@ -145,14 +153,12 @@ export const deletePoem = async (req, res) => {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    // Verify ownership
     if (poem.author.toString() !== req.user.id) {
       return res.status(401).json({ message: "Not authorized" });
     }
 
-    // Cleanup associated data (Cascading delete)
+    // Cleanup
     await Review.deleteMany({ poem: poem._id });
-    await Discussion.deleteMany({ poem: poem._id });
 
     await poem.deleteOne();
 
@@ -162,22 +168,22 @@ export const deletePoem = async (req, res) => {
   }
 };
 
+// Toggle Like
 export const toggleLike = async (req, res) => {
   try {
     const poem = await Poem.findById(req.params.id);
     const user = await User.findById(req.user.id);
-    const poemAuthor = await User.findById(poem.author); // To update totalLikes
 
     if (!poem) {
       return res.status(404).json({ message: "Poem not found" });
     }
 
-    // Check if already liked
+    // Optimization: Only fetch author if we need to update stats
+    const poemAuthor = await User.findById(poem.author);
+
     if (poem.likes.includes(req.user.id)) {
       // Unlike
       poem.likes = poem.likes.filter((id) => id.toString() !== req.user.id);
-
-      // Decrease author's total likes count if logic requires it
       if (poemAuthor) {
         poemAuthor.totalLikes = Math.max(0, (poemAuthor.totalLikes || 0) - 1);
         await poemAuthor.save();
@@ -185,8 +191,6 @@ export const toggleLike = async (req, res) => {
     } else {
       // Like
       poem.likes.push(req.user.id);
-
-      // Increase author's total likes
       if (poemAuthor) {
         poemAuthor.totalLikes = (poemAuthor.totalLikes || 0) + 1;
         await poemAuthor.save();
@@ -194,70 +198,40 @@ export const toggleLike = async (req, res) => {
     }
 
     await poem.save();
-    res.status(200).json(poem.likes); // Return updated likes array
+    res.status(200).json(poem.likes);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export const searchPoems = async (req, res) => {
-  try {
-    const keyword = req.query.q
-      ? {
-          $or: [
-            { title: { $regex: req.query.q, $options: "i" } },
-            { content: { $regex: req.query.q, $options: "i" } },
-            { tags: { $regex: req.query.q, $options: "i" } },
-          ],
-        }
-      : {};
-
-    // Combine search with public visibility
-    const poems = await Poem.find({ ...keyword, visibility: true })
-      .populate("author", "username profilePicture")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json(poems);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+//  Advanced Filter/Search
 export const getFilteredPoems = async (req, res) => {
   try {
-    const { query, tags } = req.query; // Get data from URL params
+    const { query, tags } = req.query;
+    let filter = { visibility: true };
 
-    let filter = { visibility: true }; // Always default to Public only
-
-    //  Handle Tags
     if (tags) {
       const tagArray = tags.split(",");
-
       filter.tags = { $in: tagArray.map((t) => new RegExp(t, "i")) };
     }
 
-    //  Handle Text Search (Title, Content, Author)
     if (query) {
-      // Find Users matching the name "query"
       const matchingUsers = await User.find({
         username: { $regex: query, $options: "i" },
       }).select("_id");
 
       const userIds = matchingUsers.map((u) => u._id);
 
-      //  Build the Search Query
-      // Matches Title OR Content OR Author ID
       filter.$or = [
         { title: { $regex: query, $options: "i" } },
         { content: { $regex: query, $options: "i" } },
-        { author: { $in: userIds } }, // Poems by these authors
+        { author: { $in: userIds } },
       ];
     }
 
-    //  Execute Query
     const poems = await Poem.find(filter)
-      .populate("author", "username profilePicture") // Get author details
-      .sort({ createdAt: -1 }); // Newest first
+      .populate("author", "username profilePicture")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(poems);
   } catch (error) {
