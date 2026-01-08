@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express, { json, urlencoded } from "express";
 import { connect as _connect } from "mongoose";
+import mongoose from "mongoose";
 import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
@@ -17,18 +18,22 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
-console.log("CHECKING MONGO URI:", process.env.MONGO_URI ? "It exists!" : "IT IS UNDEFINED ");
-// CORS: Allows frontend to talk to this backend
+console.log(
+  "CHECKING MONGO URI:",
+  process.env.MONGO_URI ? "It exists!" : "IT IS UNDEFINED ❌"
+);
+
 app.use(
   cors({
     origin: [
-      "https://dead-poets-society-one.vercel.app/",
+      "https://dead-poets-society-one.vercel.app", // <--- CHANGED: No trailing slash
       "http://localhost:3000",
-    ], // my Frontend URL
+    ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
-//  Body Parser: Accept JSON data in requests
+
 app.use(json());
 app.use(urlencoded({ extended: true }));
 
@@ -42,13 +47,25 @@ app.use(
   })
 );
 
-// --- Database Connection ---
-_connect(process.env.MONGO_URI)
-  .then(() => console.log(" MongoDB Connected"))
-  .catch((err) => {
+let isConnected = false;
+
+const connectDB = async () => {
+  // Check if we have an active connection state
+  if (isConnected || mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  try {
+    const conn = await _connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (err) {
     console.error(" MongoDB Connection Error:", err);
-    process.exit(1); // Exit process with failure
-  });
+  }
+};
+
+// Connect immediately when the serverless function loads
+connectDB();
 
 // --- Route Mounting ---
 app.use("/api/auth", authRoutes);
@@ -59,7 +76,6 @@ app.use("/api/favorites", favoriteRoutes);
 app.use("/api/ai", aiRoutes);
 
 // --- Global Error Handling ---
-// Catches any errors thrown in routes that weren't caught locally
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -68,7 +84,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// --- Start Server ---
+// ---Local Development Only ---
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
