@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 
-// Helper function to generate JWT
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -22,7 +21,7 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    //  Create user
+    // Create user
     const user = await User.create({
       username,
       email,
@@ -30,12 +29,29 @@ export const register = async (req, res) => {
     });
 
     if (user) {
-      res.status(201).json({
-        _id: user.id,
+      // Set Session Data
+      req.session.user = {
+        id: user._id,
         name: user.username,
         email: user.email,
         profilePicture: user.profilePicture,
-        token: generateToken(user._id),
+        role: user.role,
+      };
+
+      // FORCE SAVE before response (Fixes Vercel 401 Issue)
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+
+        res.status(201).json({
+          _id: user.id,
+          name: user.username,
+          email: user.email,
+          profilePicture: user.profilePicture,
+          token: generateToken(user._id), // Kept for backward compatibility
+        });
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -52,16 +68,32 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      // This automatically creates a cookie and saves it to MongoDB
+      //  Set Session Data
       req.session.user = {
         id: user._id,
-        name: user.name,
+        name: user.username, // Normalized field name (was user.name in your snippet, changed to match model likely)
         email: user.email,
         profilePicture: user.profilePicture,
         role: user.role,
       };
 
-      res.json({ message: "Logged in successfully", user: req.session.user });
+      // FORCE SAVE before response (Fixes Vercel 401 Issue)
+      req.session.save((err) => {
+        if (err) {
+          console.error("Login Session save error:", err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+
+        res.json({
+          message: "Logged in successfully",
+          user: req.session.user,
+
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          profilePicture: user.profilePicture,
+        });
+      });
     } else {
       res.status(400).json({ message: "Invalid credentials" });
     }
@@ -71,19 +103,24 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  // Destroy the session in the database
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ message: "Could not log out" });
-    // Clear the cookie on the client
-    res.clearCookie("connect.sid");
+
+    // Explicitly clear the cookie with the same settings
+    res.clearCookie("connect.sid", { path: "/" });
     res.json({ message: "Logged out successfully" });
   });
 };
 
 export const getMe = async (req, res) => {
   try {
-    // req.user is set by your auth middleware
-    const user = await User.findById(req.user.id).select("-password"); // Exclude password from return
+    // Check if session exists first
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ message: "Not authorized, no session" });
+    }
+
+    // Use session ID
+    const user = await User.findById(req.session.user.id).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -97,19 +134,35 @@ export const getMe = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    // Ensure we have a user ID from the session
+    const userId = req.user
+      ? req.user.id
+      : req.session.user
+      ? req.session.user.id
+      : null;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const user = await User.findById(userId);
 
     if (user) {
-      // Update fields if they exist in request body, otherwise keep current
       user.bio = req.body.bio || user.bio;
       user.profilePicture = req.body.profilePicture || user.profilePicture;
       user.username = req.body.username || user.username;
 
       const updatedUser = await user.save();
 
+      if (req.session.user) {
+        req.session.user.name = updatedUser.username;
+        req.session.user.profilePicture = updatedUser.profilePicture;
+        req.session.save(); // Save background update
+      }
+
       res.status(200).json({
         _id: updatedUser._id,
-        name: updatedUser.name,
+        name: updatedUser.username,
         email: updatedUser.email,
         bio: updatedUser.bio,
         profilePicture: updatedUser.profilePicture,
