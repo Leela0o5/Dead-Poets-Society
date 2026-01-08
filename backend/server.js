@@ -17,16 +17,18 @@ import aiRoutes from "./routes/ai.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set("trust proxy", 1);
+
 // --- Middleware ---
 console.log(
   "CHECKING MONGO URI:",
-  process.env.MONGO_URI ? "It exists!" : "IT IS UNDEFINED ❌"
+  process.env.MONGO_URI ? "It exists!" : "IT IS UNDEFINED "
 );
 
 app.use(
   cors({
     origin: [
-      "https://dead-poets-society-one.vercel.app", // <--- CHANGED: No trailing slash
+      "https://dead-poets-society-one.vercel.app",
       "http://localhost:3000",
     ],
     credentials: true,
@@ -43,31 +45,29 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 },
-    secure: true,
-    sameSite: "none",
-    httpOnly: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: true,
+      sameSite: "none",
+      httpOnly: true,
+    },
   })
 );
 
+// Database Connection
 let isConnected = false;
-
 const connectDB = async () => {
-  // Check if we have an active connection state
   if (isConnected || mongoose.connection.readyState === 1) {
     return;
   }
-
   try {
     const conn = await _connect(process.env.MONGO_URI);
     isConnected = true;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(` MongoDB Connected: ${conn.connection.host}`);
   } catch (err) {
     console.error(" MongoDB Connection Error:", err);
   }
 };
-
-// Connect immediately when the serverless function loads
 connectDB();
 
 // --- Route Mounting ---
@@ -87,7 +87,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ---Local Development Only ---
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
