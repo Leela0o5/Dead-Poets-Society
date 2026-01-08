@@ -21,7 +21,10 @@ const PORT = process.env.PORT || 5000;
 // CORS: Allows frontend to talk to this backend
 app.use(
   cors({
-    origin: "http://localhost:3000", // my Frontend URL
+    origin: [
+      "https://dead-poets-society-one.vercel.app/",
+      "http://localhost:3000",
+    ], // my Frontend URL
     credentials: true,
   })
 );
