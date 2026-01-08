@@ -1,4 +1,4 @@
-# 🖋️ Dead Poets Society
+#  Dead Poets Society
 
 > *"Poetry, beauty, romance, love, these are what we stay alive for."*
 
