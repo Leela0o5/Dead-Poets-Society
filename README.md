@@ -1,7 +1,5 @@
 #  Dead Poets Society
 
-> *"Poetry, beauty, romance, love, these are what we stay alive for."*
-
 A full-stack social platform for poetry enthusiasts. Users can write, share, and review poems.
 > **⚠️ Note:** This platform is actively under development. New features and improvements are being added regularly to enhance the user experience and expand functionality.
 
