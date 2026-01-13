@@ -1,7 +1,6 @@
 #  Dead Poets Society
 
 A full-stack social platform for poetry enthusiasts. Users can write, share, and review poems.
-> ** Note:** This platform is actively under development. New features and improvements are being added regularly to enhance the user experience and expand functionality.
 
 
 **[Live Demo](https://dead-poets-society-one.vercel.app/)**
